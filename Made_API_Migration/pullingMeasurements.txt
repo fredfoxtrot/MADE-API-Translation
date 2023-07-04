@@ -1,0 +1,137 @@
+﻿garmentIdString = garmentId.toString();
+actionRecord = zoho.crm.v1.getRecordById("CustomModule24",actionId);
+info actionRecord;
+actions = zoho.crm.v1.searchRecordsByPDC("CustomModule24","Garment_ID",garmentIdString);
+garmentRecord = zoho.crm.v1.getRecordById("CustomModule13",garmentId);
+fabricIdString = garmentRecord.get("Fabric_ID");
+info "FABRIC STRING: " + fabricIdString;
+dealId = garmentRecord.get("Deal_ID");
+info "DEAL ID: " + dealId;
+dealRecord = zoho.crm.v1.getRecordById("Potentials",dealId.toLong());
+info dealRecord;
+clientId = dealRecord.get("CONTACTID");
+info "CLIENT ID: " + clientId;
+actionDealId = actionRecord.get("Deal_ID");
+actionClientId = actionRecord.get("Client_ID");
+actionmp = Map:String();
+actionmp.put("Deal_ID",dealId);
+actionmp.put("Client_ID",clientId);
+/*info "TEST: " + actionRecord.get("Alteration Required");
+if(actionRecord.get("Alteration Required_ID") != null)
+{
+	info "TEST 1: " + actionRecord.get("Alteration Required_ID");
+	altRecord = zoho.crm._getRecordById("CustomModule25",actionRecord.get("Alteration Required_ID").toLong());
+	altRecordCost = ifnull(altRecord.get("Cost"),"0");
+	actionmp.put("Expected Price",altRecordCost.toDecimal());
+}*/
+updateAction = zoho.crm.v1.updateRecord("CustomModule24",actionId.toString(),actionmp);
+/*preFittingText = "";
+x1stFittingText = "";
+addlFittingsText = "";
+postFittingText = "";
+preFittingCount = 0;
+x1stFittingCount = 0;
+addlFittingsCount = 0;
+postFittingCount = 0;*/
+alterationCosts = 0.0;
+errorCosts = 0.0;
+clientaltCosts = 0.0;
+for each  action in actions
+{
+	info "ACTION: " + action;
+	actionType = action.get("Action Type");
+	costToMADE = ifnull(action.get("Cost to MADE (after Reimbursement)").toDecimal(),0.0);
+	//info "ACTION.GET: " + action.get("Cost to MADE (after Reimbursement)");
+	//info "Cost to Made " + costToMADE;
+	if(actionType == "Alteration - Standard Alteration (MADE)" && costToMADE != 0.0)
+	{
+		alterationCosts = alterationCosts + costToMADE;
+	}
+	else if(actionType == "Alteration - Client Paid" && costToMADE != 0.0)
+	{
+		alterationCosts = alterationCosts + costToMADE - clientaltCosts;
+	}
+	else if((actionType == "Error (General)" || actionType == "Alteration (Supplier Error)" || actionType == "Alteration (Internal Error)") && costToMADE != 0.0)
+	{
+		errorCosts = errorCosts + costToMADE;
+	}
+	/*info "GOT HERE";
+	info "ACTION TYPE: " + actionType;
+	if(actionType == "Standard Alteration (MADE)" || actionType == "Error-Alteration" || actionType == "Supplier Error Alteration")
+	{
+		alterationNotes = action.get("Alteration Notes");
+		actionStage = action.get("Stage this Action was created");
+		//info action;
+		if(!isNull(action.get("Alteration Required_ID")))
+		{
+			alterationID = action.get("Alteration Required_ID").toLong();
+			//info "Alteration Notes: " + alterationNotes;
+			//info "Action Stage: " + actionStage;
+			//info "Alteration ID: " + alterationID;
+			alterationRecord = zoho.crm._getRecordById("CustomModule25",alterationID);
+			alteration = alterationRecord.get("Short Name");
+			//info "Alteration: " + alteration;
+		}
+		else
+		{
+			alteration = "UNKNOWN?!";
+			//info "Alteration: " + alteration;
+		}
+		if(actionStage == "Pre-Fitting")
+		{
+			preFittingCount = preFittingCount + 1;
+			preFittingText = preFittingText + preFittingCount + ". " + alteration + "\n" + alterationNotes + "\n \n";
+		}
+		else if(actionStage == "1st Fitting")
+		{
+			x1stFittingCount = x1stFittingCount + 1;
+			x1stFittingText = x1stFittingText + x1stFittingCount + ". " + alteration + "\n" + alterationNotes + "\n \n";
+		}
+		else if(actionStage == "Add'l Fitting")
+		{
+			addlFittingsCount = addlFittingsCount + 1;
+			addlFittingsText = addlFittingsText + addlFittingsCount + ". " + alteration + "\n" + alterationNotes + "\n \n";
+		}
+		else if(actionStage == "Post-Fitting")
+		{
+			postFittingCount = postFittingCount + 1;
+			postFittingText = postFittingText + postFittingCount + ". " + alteration + "\n" + alterationNotes + "\n \n";
+		}
+	}*/
+}
+/*info "Actions Pre-Fitting" + preFittingText;
+info "Actions 1st Fitting" + x1stFittingText;
+info "Actions Add'l Fitting" + addlFittingsText;
+info "Actions Post-Fitting" + postFittingText;*/
+info "Alteration Costs" + alterationCosts;
+info "Error Costs" + errorCosts;
+mp = Map:String();
+/*mp.put("Actions Pre-Fitting",preFittingText);
+mp.put("Actions 1st Fitting",x1stFittingText);
+mp.put("Actions Add'l Fitting",addlFittingsText);
+mp.put("Actions Post-Fitting",postFittingText);*/
+mp.put("Alteration Costs",alterationCosts);
+mp.put("Error Costs",errorCosts);
+updateGarment = zoho.crm.v1.updateRecord("CustomModule13",garmentIdString,mp);
+garmentsInDeal = zoho.crm.v1.searchRecordsByPDC("CustomModule13","Deal_ID",dealId);
+totalAlterations = 0.0;
+totalErrors = 0.0;
+totalDiscounts = 0.0;
+totalCOGS = 0.0;
+totalAmount = 0.0;
+for each  garm in garmentsInDeal
+{
+	totalAlterations = totalAlterations + ifnull(garm.get("Alteration Costs"),"0").toDecimal();
+	totalErrors = totalErrors + ifnull(garm.get("Error Costs"),"0").toDecimal();
+	totalCOGS = totalCOGS + ifnull(garm.get("COGS"),"0").toDecimal();
+	totalDiscounts = totalDiscounts + ifnull(garm.get("Discount"),"0").toDecimal();
+	totalAmount = totalAmount + ifnull(garm.get("Total Price"),"0").toDecimal();
+}
+dealmp = Map:String();
+dealmp.put("Alterations",totalAlterations);
+dealmp.put("Errors",totalErrors);
+dealmp.put("COGS",totalCOGS);
+dealmp.put("Discounts",totalDiscounts);
+dealmp.put("Amount",totalAmount);
+updateDeal = zoho.crm.v1.updateRecord("Potentials",dealId,dealmp);
+//info "Success";
