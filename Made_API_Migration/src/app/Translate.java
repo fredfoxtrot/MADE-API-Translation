@@ -15,7 +15,6 @@ import java.util.Set;
 public class Translate {
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		System.out.println("Starting application");
 		HashMap<String, String> mapping;
 		
@@ -33,21 +32,14 @@ public class Translate {
 			
 			String newFile = functionFileName.split("\\.")[0]+"_Updated.txt";
 			
-			//System.out.println(newFile);
-			
-			//FileWriter fileWriter = new FileWriter(newFile);
-		    //PrintWriter printWriter = new PrintWriter(fileWriter);
 			Writer printWriter = null;
 			BufferedWriter out = null;
 			
 			printWriter = new OutputStreamWriter(new FileOutputStream(newFile), StandardCharsets.UTF_8);
 			
-		    //printWriter.println("test");
-			
-		    //for each line from function, check if it's has .get or .put
+		        //for each line from function, check if it's has .get or .put
 			while (sc.hasNextLine()) {
 				String line = sc.nextLine();
-				
 				
 				//for each line from function, check if  .get AND .put
 				if(line.contains(".get") && line.contains(".put")) {
@@ -79,8 +71,8 @@ public class Translate {
 				}
 				//for each line from function, check if it's has .get OR .put OR .update
 				else if(line.contains(".get") || line.contains(".put") || line.contains(".update") || line.contains(".search")) {
-					//substitute with mapping
 					
+					//substitute with mapping
 					Set keySet; 
 					keySet = mapping.keySet();
 					boolean found = false;
@@ -114,10 +106,8 @@ public class Translate {
 			 printWriter.close();
 			 sc.close();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -141,12 +131,8 @@ public class Translate {
 				String[] mapsArr = new String[2];
 				
 				mapsArr = line.split("\\|");
-				
-			//System.out.print(mapsArr[0]);
-			//System.out.println(" | "+mapsArr[1]);
 			
 			mapping.put(mapsArr[0], mapsArr[1]);
-				
 				
 			}
 			
